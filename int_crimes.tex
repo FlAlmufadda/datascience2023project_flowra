@@ -1,0 +1,661 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={CS3072 Final Project},
+  pdfauthor={Flowra Almufadda \& Danah Milyani},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{CS3072 Final Project}
+\author{Flowra Almufadda \& Danah Milyani}
+\date{25/5/2023}
+
+\begin{document}
+\maketitle
+
+\hypertarget{coding-utf-8---}{%
+\section{\texorpdfstring{-\emph{- coding: utf-8
+-}-}{-\/- coding: utf-8 -\/-}}\label{coding-utf-8---}}
+
+\hypertarget{a-comparative-analysis-report-of-homicide-rates-across-countries}{%
+\section{A Comparative Analysis Report of Homicide Rates across
+Countries}\label{a-comparative-analysis-report-of-homicide-rates-across-countries}}
+
+\#Introduction: This report presents an exploratory data analysis of the
+dataset on intentional homicides and other crimes. The dataset provides
+insights into the incidence of intentional homicides and various other
+crime types across different countries. The analysis aims to uncover
+patterns, trends, and relationships within the data, offering valuable
+information for understanding crime rates worldwide. ``\,``\,''
+
+``\,````\# 1. Libraries These are all the libraries necessary for the
+procedure of this repository/project, including for data processing,
+data representation, and machine learning algorithms.''``\,''
+
+library(tidyverse) library(ggplot2) library(randomForest) library(sf)
+library(maps) library(leaflet) library(caret) library(xgboost)\\
+options(warn = -1)
+
+``\,``\,``\# 2. Data Preprocessing
+
+\#\#Information about the data The dataset consists of several
+variables, including country names, years, intentional homicides,
+attempted intentional homicides, kidnappings, robberies, burglaries, and
+motor vehicle thefts. Each variable represents the respective crime
+counts reported for a specific country and year. The unit of observation
+in the dataset is countries or territories.
+
+Dataset Name: Intentional homicides and other crimes By type of crime
+(per 100,000 population and homicide victims by sex).
+
+Source: The dataset provided by the United Nations (UN) contains
+information on intentional homicides and other crimes for different
+countries or territories.
+
+Last updated: 18-Oct-2022
+
+Outcome Variable:
+
+\begin{itemize}
+\tightlist
+\item
+  The outcome variable of interest is ``Intentional homicides and other
+  crimes per 100,000 persons.''
+\item
+  Measurement: The crime rate is measured as the number of intentional
+  homicides and other crimes per 100,000 persons in a specific country
+  or territory.
+\end{itemize}
+
+The dataset was loaded into RStudio, and basic data cleaning steps were
+performed, including removing leading or trailing white spaces from
+column names and identifying missing values. ``\,``\,''
+
+\hypertarget{read-the-csv-file}{%
+\section{Read the CSV file}\label{read-the-csv-file}}
+
+data \textless-
+read.csv(``\url{http://data.un.org/_Docs/SYB/CSV/SYB65_328_202209_Intentional\%20homicides\%20and\%20other\%20crimes.csv}'',
+stringsAsFactors = FALSE)
+
+``\,``\,``\#\# Remove unnecessary columns
+
+Removing unnecessary columns reduces the amount of data that needs to be
+loaded into memory or processed, leading to better performance and lower
+memory consumption. This is particularly important when dealing with
+with this dataset due to it being large as well as having limited
+computational resources. ``\,``\,''
+
+data \textless- data \%\textgreater\%
+select(-c(Type..period..indicator., X60, X61, X62, X63, X64, X65)) data
+\textless- select(data, -c(1:2)) \# Assuming the first two columns are
+unnecessary, remove them
+
+\hypertarget{remove-leading-or-trailing-white-spaces-from-column-names}{%
+\section{Remove leading or trailing white spaces from column
+names}\label{remove-leading-or-trailing-white-spaces-from-column-names}}
+
+colnames(data) \textless- trimws(colnames(data))
+
+``\,````\#\# Dealing with and dropping rows with missing values This is
+due to it not serving any purpose or necessity for the process,
+therefore eliminating it.''``\,''
+
+data \textless- data \%\textgreater\% drop\_na()
+
+\hypertarget{check-for-missing-values}{%
+\section{Check for missing values}\label{check-for-missing-values}}
+
+missing\_values \textless- colSums(is.na(data)) data \textless-
+na.omit(data) \# Remove rows with missing values
+
+``\,````\#\# Rename columns for clarity Renaming columns in a dataset
+serves the purpose of providing more descriptive and meaningful names to
+the variables (columns) present in the dataset. By giving the columns
+clear and informative names, it enhances the readability, understanding,
+and interpretability of the data.''``\,''
+
+colnames(data) \textless- c(``Country'', ``Year'', ``Region'',
+``Subregion'', ``Rate'')
+
+``\,``\,``\#\# Convert the `Rate' column to numeric The conversion of
+the `Rate' column to numeric is necessary to ensure that the values in
+that column are treated as numerical data rather than strings or
+factors.
+
+Converting the `Rate' column to numeric allows for mathematical
+operations, statistical analysis, and machine learning algorithms to be
+applied to that column accurately. Without this conversion, any
+computations or analyses involving the `Rate' column would yield
+incorrect results or errors since R would treat it as character data
+rather than numerical. ``\,``\,''
+
+data\(Rate <- as.numeric(data\)Rate)
+
+``\,````\#\# Changing plot size This is done for assist with the
+visualization stage.''``\,''
+
+fig \textless- function(width, height)\{ options(repr.plot.width =
+width, repr.plot.height = height) \}
+
+``\,``\,``\# 3. Exploratory Data Analysis (EDA) Exploratory Data
+Analysis (EDA) is a crucial initial step in data analysis that involves
+the exploration and understanding of the underlying patterns,
+relationships, and characteristics of the dataset. The process of EDA
+typically begins with obtaining a basic understanding of the dataset's
+structure, including the number of observations and variables. It then
+proceeds to examine summary statistics such as measures of central
+tendency, dispersion, and distribution to gain insights into the data's
+overall distribution and variability.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Descriptive Statistics:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    The structure of the dataset was examined, revealing the number of
+    observations and variables.
+  \item
+    Summary statistics were calculated, providing an overview of the
+    data distribution, including measures such as minimum, maximum,
+    mean, and median. ``\,``\,''
+  \end{itemize}
+\end{enumerate}
+
+\hypertarget{structure-of-the-dataset}{%
+\section{Structure of the dataset}\label{structure-of-the-dataset}}
+
+str(data)
+
+\hypertarget{summary-statistics}{%
+\section{Summary statistics}\label{summary-statistics}}
+
+summary(data)
+
+``\,````2. Temporal Analysis: - The dataset covers multiple years,
+allowing for a temporal analysis of crime rates over time. - Line plots
+or bar charts can be utilized to visualize the trends in intentional
+homicides and other crimes across different years.''``\,''
+
+\hypertarget{line-plot-for-intentional-homicides-over-time}{%
+\section{Line plot for intentional homicides over
+time}\label{line-plot-for-intentional-homicides-over-time}}
+
+ggplot(data, aes(x = Year, y = Homicides)) + geom\_line() + labs(x =
+``Year'', y = ``Intentional Homicides'', title = ``Trends in Intentional
+Homicides over Time'')
+
+\hypertarget{bar-chart-for-other-crimes-over-time}{%
+\section{Bar chart for other crimes over
+time}\label{bar-chart-for-other-crimes-over-time}}
+
+ggplot(data, aes(x = Year, y = Robbery)) + geom\_bar(stat =
+``identity'', fill = ``blue'') + labs(x = ``Year'', y = ``Other
+Crimes'', title = ``Trends in Other Crimes over Time'')
+
+\hypertarget{bar-plot-for-intentional-homicides-by-country}{%
+\section{Bar plot for intentional homicides by
+country}\label{bar-plot-for-intentional-homicides-by-country}}
+
+ggplot(data, aes(x = Country, y = Intentional.homicides)) +
+geom\_bar(stat = ``identity'', fill = ``steelblue'') + labs(x =
+``Country'', y = ``Intentional Homicides'', title = ``Intentional
+Homicides by Country'') + theme(axis.text.x = element\_text(angle = 90,
+hjust = 1)) + coord\_flip()
+
+\hypertarget{scatter-plot-for-intentional-homicides-vs.-other-crimes}{%
+\section{Scatter plot for intentional homicides vs.~other
+crimes}\label{scatter-plot-for-intentional-homicides-vs.-other-crimes}}
+
+ggplot(data, aes(x = Intentional.homicides, y = Other.crimes)) +
+geom\_point() + labs(x = ``Intentional Homicides'', y = ``Other
+Crimes'', title = ``Intentional Homicides vs.~Other Crimes'')
+
+\hypertarget{histogram-of-intentional-homicides}{%
+\section{Histogram of intentional
+homicides}\label{histogram-of-intentional-homicides}}
+
+ggplot(data, aes(x = Intentional.homicides)) + geom\_histogram(fill =
+``steelblue'', bins = 20) + labs(x = ``Intentional Homicides'', y =
+``Frequency'', title = ``Distribution of Intentional Homicides'')
+
+``\,````3. Spatial Analysis: - Geographic variations in crime rates can
+be explored by plotting the data on a map. - Choropleth maps or bubble
+maps can be used to represent the intensity of crimes across different
+countries.''``\,''
+
+\hypertarget{create-a-choropleth-map-for-intentional-homicides}{%
+\section{Create a choropleth map for intentional
+homicides}\label{create-a-choropleth-map-for-intentional-homicides}}
+
+world\_map \textless- map\_data(``world'') data\_map \textless-
+merge(world\_map, data, by.x = ``region'', by.y = ``Country'', all.x =
+TRUE) ggplot(data\_map, aes(x = long, y = lat, group = group, fill =
+Homicides)) + geom\_polygon() + scale\_fill\_gradient(low =
+``lightblue'', high = ``darkblue'', na.value = ``white'') + labs(fill =
+``Intentional Homicides'', title = ``Choropleth Map of Intentional
+Homicides'')
+
+\hypertarget{create-a-bubble-map-for-other-crimes}{%
+\section{Create a bubble map for other
+crimes}\label{create-a-bubble-map-for-other-crimes}}
+
+ggplot(data, aes(x = Year, y = Country, size = Robbery, fill =
+Homicides)) + geom\_point() + scale\_size(range = c(2, 10)) +
+scale\_fill\_gradient(low = ``lightblue'', high = ``darkblue'', na.value
+= ``white'') + labs(x = ``Year'', y = ``Country'', size = ``Other
+Crimes'', fill = ``Intentional Homicides'', title = ``Bubble Map of
+Other Crimes'')
+
+``\,``\,'' 4. Correlation Analysis: - Relationships between different
+types of crimes can be examined using correlation analysis. - Scatter
+plots or correlation matrices can be employed to visualize the
+associations between variables.''\,``\,''
+
+\hypertarget{scatter-plot-between-intentional-homicides-and-other-crimes}{%
+\section{Scatter plot between intentional homicides and other
+crimes}\label{scatter-plot-between-intentional-homicides-and-other-crimes}}
+
+ggplot(data, aes(x = Homicides, y = Robbery)) + geom\_point() + labs(x =
+``Intentional Homicides'', y = ``Other Crimes'', title = ``Scatter Plot:
+Intentional Homicides vs.~Other Crimes'')
+
+\hypertarget{correlation-matrix}{%
+\section{Correlation matrix}\label{correlation-matrix}}
+
+cor\_matrix \textless- cor(data{[}, c(``Homicides'',
+``AttemptedMurder'', ``Robbery''){]}) cor\_matrix
+
+``\,````\#\# Identification of outliers or patterns''``\,''
+
+\hypertarget{box-plot-for-intentional-homicides}{%
+\section{Box plot for intentional
+homicides}\label{box-plot-for-intentional-homicides}}
+
+ggplot(data, aes(y = Homicides)) + geom\_boxplot() + labs(y =
+``Intentional Homicides'', title = ``Box Plot: Intentional Homicides'')
+
+\hypertarget{scatter-plot-matrix-for-all-variables}{%
+\section{Scatter plot matrix for all
+variables}\label{scatter-plot-matrix-for-all-variables}}
+
+pairs(data{[}, c(``Homicides'', ``AttemptedMurder'', ``Robbery''){]})
+
+\hypertarget{outlier-identification-using-tukeys-method}{%
+\section{Outlier identification using Tukey's
+method}\label{outlier-identification-using-tukeys-method}}
+
+outliers \textless- boxplot.stats(data\(Homicides)\)out
+
+\hypertarget{identify-countries-with-outliers}{%
+\section{Identify countries with
+outliers}\label{identify-countries-with-outliers}}
+
+outlier\_countries \textless- data\(Country[data\)Homicides \%in\%
+outliers{]}
+
+\hypertarget{print-outlier-countries}{%
+\section{Print outlier countries}\label{print-outlier-countries}}
+
+cat(``Countries with outliers in intentional homicides:'', ``\n'')
+cat(outlier\_countries, sep = ``,'')
+
+``\,``\,``\# 4. Feature Engineering
+
+Feature Engineering is the process of creating new features or
+transforming existing features in a dataset to enhance the performance
+and effectiveness of machine learning models. It involves extracting
+meaningful information from raw data and representing it in a format
+that is more suitable for the learning algorithm. Feature engineering
+begins with data exploration and understanding the problem domain,
+followed by a series of steps such as data preprocessing, feature
+extraction, feature selection, and feature transformation. This may
+include tasks such as handling missing values, encoding categorical
+variables, scaling numeric features, creating interaction terms,
+deriving new variables from existing ones, or engineering
+domain-specific features. The goal is to capture relevant patterns,
+relationships, or characteristics of the data that can improve the
+model's predictive power, reduce overfitting, or enhance
+interpretability. Feature engineering requires a deep understanding of
+the data, domain knowledge, and iterative experimentation to iteratively
+refine and optimize the feature set for the specific machine learning
+task at hand.
+
+\hypertarget{calculate-homicide-rates-per-capita}{%
+\subsection{Calculate homicide rates per
+capita}\label{calculate-homicide-rates-per-capita}}
+
+``\,``\,''
+
+data\(Population <- as.numeric(data\)Population) \# Convert population
+column to numeric if needed
+
+\hypertarget{merge-the-intentional-homicides-and-population-data-based-on-a-common-identifier-e.g.-country}{%
+\section{Merge the intentional homicides and population data based on a
+common identifier (e.g.,
+country)}\label{merge-the-intentional-homicides-and-population-data-based-on-a-common-identifier-e.g.-country}}
+
+merged\_data \textless- merge(homicide\_data, population\_data, by =
+``Country'')
+
+\hypertarget{calculate-homicide-rates-per-capita-1}{%
+\section{Calculate homicide rates per
+capita}\label{calculate-homicide-rates-per-capita-1}}
+
+merged\_data\(homicide_rate <- (merged_data\)Intentional.homicides /
+merged\_data\$Population) * 100000 \# Multiply by 100,000 to express the
+rate per 100,000 people
+
+\hypertarget{view-the-calculated-homicide-rates-per-capita}{%
+\section{View the calculated homicide rates per
+capita}\label{view-the-calculated-homicide-rates-per-capita}}
+
+head(merged\_data{[}, c(``Country'', ``homicide\_rate''){]})
+
+data\(HomicideRate <- data\)Homicides / data\$Population * 100000 \#
+Calculate homicide rate per capita
+
+``\,````\#\# Create categorical variables based on income levels or
+regional classifications''``\,''
+
+\hypertarget{categorize-income-levels}{%
+\section{Categorize income levels}\label{categorize-income-levels}}
+
+data\(IncomeCategory <- cut(data\)Income, breaks = c(-Inf, 10000, 20000,
+30000, Inf), labels = c(``Low'', ``Medium'', ``High'', ``Very High''),
+include.lowest = TRUE)
+
+\hypertarget{create-regional-classifications}{%
+\section{Create regional
+classifications}\label{create-regional-classifications}}
+
+data\(RegionCategory <- cut(data\)Region, breaks = c(-Inf, 2, 4, 6,
+Inf), labels = c(``Region1'', ``Region2'', ``Region3'', ``Region4''),
+include.lowest = TRUE)
+
+``\,````\#\# Derive new variables from existing ones''``\,''
+
+\hypertarget{derive-new-variable-crimeindex}{%
+\section{Derive new variable:
+CrimeIndex}\label{derive-new-variable-crimeindex}}
+
+data\(CrimeIndex <- data\)Homicides +
+data\(AttemptedMurder + data\)Robbery
+
+\hypertarget{derive-new-variable-crimeratio}{%
+\section{Derive new variable:
+CrimeRatio}\label{derive-new-variable-crimeratio}}
+
+data\(CrimeRatio <- data\)Robbery /
+(data\(Homicides + data\)AttemptedMurder)
+
+``\,``\,``\# 5. Statistical Analysis
+
+Statistical analysis is a systematic process of organizing, analyzing,
+interpreting, and drawing meaningful conclusions from data. It involves
+several steps to ensure accurate and reliable results. The process
+typically begins with data collection, where relevant information is
+gathered using various methods such as surveys, experiments, or
+observations. Once the data is collected, it undergoes preprocessing,
+which includes data cleaning, transformation, and formatting to remove
+any errors, missing values, or inconsistencies.
+
+Five techniques were considered for this process.
+
+\hypertarget{regression-analysis}{%
+\subsection{Regression Analysis}\label{regression-analysis}}
+
+Regression Analysis is a statistical technique used to examine the
+relationship between a dependent variable and one or more independent
+variables. It helps to understand how changes in the independent
+variables impact the dependent variable and allows for prediction or
+estimation based on the identified relationships. Regression analysis
+provides insights into the direction, magnitude, and significance of
+these relationships. ``\,``\,''
+
+\hypertarget{simple-linear-regression}{%
+\section{Simple Linear Regression}\label{simple-linear-regression}}
+
+lm\_model \textless- lm(Homicides \textasciitilde{} Robbery, data =
+data) summary(lm\_model)
+
+\hypertarget{multiple-linear-regression}{%
+\section{Multiple Linear Regression}\label{multiple-linear-regression}}
+
+lm\_multiple \textless- lm(Homicides \textasciitilde{} Robbery +
+AttemptedMurder, data = data) summary(lm\_multiple)
+
+``\,````\#\# Correlation Analysis Correlation Analysis, on the other
+hand, focuses on quantifying the strength and direction of the
+relationship between two or more variables. It measures the degree of
+association between variables and helps identify patterns or trends.
+Correlation coefficients, such as Pearson's correlation coefficient,
+provide a numerical value indicating the strength and direction of the
+relationship. Correlation analysis helps in understanding the
+interdependence between variables and can guide further analysis or
+decision-making.''``\,''
+
+cor\_matrix \textless- cor(data{[}, c(``Homicides'', ``Robbery'',
+``AttemptedMurder''){]}) cor\_matrix
+
+``\,````\#\# Hypothesis Testing Hypothesis Testing is a statistical
+method used to assess the validity of a claim or hypothesis about a
+population parameter. It involves setting up null and alternative
+hypotheses, collecting sample data, and using statistical tests to
+determine the likelihood of observing the data under the null
+hypothesis. Hypothesis testing helps make conclusions about population
+parameters based on sample data, allowing researchers to draw inferences
+and make decisions about the relationships or differences between
+variables.''``\,''
+
+\hypertarget{one-sample-t-test}{%
+\section{One-Sample t-test}\label{one-sample-t-test}}
+
+t\_test \textless- t.test(data\$Homicides, mu = 10) t\_test
+
+\hypertarget{paired-t-test}{%
+\section{Paired t-test}\label{paired-t-test}}
+
+t\_test\_paired \textless-
+t.test(data\(Homicides, data\)AttemptedMurder, paired = TRUE)
+t\_test\_paired
+
+\hypertarget{two-sample-t-test}{%
+\section{Two-Sample t-test}\label{two-sample-t-test}}
+
+t\_test\_two \textless- t.test(data\(Homicides ~ data\)Region)
+t\_test\_two
+
+``\,````\#\# Logistic Regression Logistic Regression is a statistical
+technique used to model and analyze categorical dependent variables. It
+is particularly useful when the dependent variable represents a binary
+outcome or a categorical outcome with multiple levels. Logistic
+regression estimates the probability of the occurrence of a particular
+outcome based on the values of the independent variables. It is widely
+used in various fields, such as healthcare, finance, and social
+sciences, to predict and understand the factors influencing categorical
+outcomes.''``\,''
+
+logit\_model \textless- glm(Homicides \textasciitilde{} Robbery +
+AttemptedMurder, data = data, family = binomial) summary(logit\_model)
+
+``\,````\#\# Clustering Analysis Clustering Analysis is a machine
+learning technique used to group similar objects or data points into
+clusters based on their inherent similarities or patterns. It helps
+identify structures or relationships within data without prior knowledge
+of the groups. Clustering analysis is useful for data exploration,
+pattern recognition, and segmentation. It allows for the discovery of
+groups or clusters that share common characteristics or behaviors,
+enabling better understanding and decision-making based on the
+identified clusters.''``\,''
+
+\hypertarget{hierarchical-cluster-analysis}{%
+\section{Hierarchical Cluster
+Analysis}\label{hierarchical-cluster-analysis}}
+
+dist\_matrix \textless- dist(data{[}, c(``Homicides'', ``Robbery'',
+``AttemptedMurder''){]}) hc \textless- hclust(dist\_matrix) plot(hc)
+
+\hypertarget{k-means-cluster-analysis}{%
+\section{K-means Cluster Analysis}\label{k-means-cluster-analysis}}
+
+kmeans\_model \textless- kmeans(data{[}, c(``Homicides'', ``Robbery'',
+``AttemptedMurder''){]}, centers = 3) kmeans\_model\$cluster
+
+``\,``\,``\# 6. Machine Learning
+
+Machine learning is essential to data science because it makes it
+possible to glean valuable insights and forecasts from massive amounts
+of data. Machine learning algorithms are used in data science to
+implicitly program algorithms to automatically discover patterns,
+relationships, and trends in the data. Data scientists are better
+equipped to handle complex issues and make data-driven decisions because
+of their capacity for learning from data.
+
+\hypertarget{sampling}{%
+\subsection{Sampling}\label{sampling}}
+
+Sampling is the process of selecting a subset of data from a larger
+dataset to use for analysis, modeling, or evaluation purposes. It is
+commonly used in machine learning and statistical analysis to split the
+data into separate train and test sets.
+
+The purpose of sampling is to ensure that the model is trained on a
+representative subset of the data and evaluated on a separate, unseen
+subset. This helps assess the performance and generalization ability of
+the model.
+
+The reason for splitting the data into training and testing sets is to
+evaluate how well the model performs on unseen data. By training the
+model on a portion of the data and testing it on a separate portion, we
+can estimate how well the model will generalize to new, unseen data. For
+this test, we will be using the 70:30 ratio to determine and predict
+with the following models. ``\,``\,''
+
+\hypertarget{random-sampling}{%
+\section{Random sampling}\label{random-sampling}}
+
+sample\_data \textless- data{[}sample(nrow(data), 100, replace = FALSE),
+{]}
+
+\hypertarget{stratified-sampling}{%
+\section{Stratified sampling}\label{stratified-sampling}}
+
+strata\_sample\_data \textless- data \%\textgreater\% group\_by(Region)
+\%\textgreater\% slice\_sample(prop = 0.2)
+
+\hypertarget{cross-validation}{%
+\section{Cross-validation}\label{cross-validation}}
+
+set.seed(123) folds \textless- createFolds(data\$Homicides, k = 5,
+returnTrain = TRUE) for (i in 1:5) \{ train\_data \textless-
+data{[}folds{[}{[}i{]}{]}, {]} test\_data \textless-
+data{[}-folds{[}{[}i{]}{]}, {]} \# Perform machine learning on each fold
+\}
+
+``\,````\#\# Random Forest A popular machine learning algorithm for both
+classification and regression tasks is called Random Forest. It is a
+component of ensemble learning techniques and combines the predictions
+of various decision trees to produce predictions that are more reliable
+and accurate. In Random Forest, a number of decision trees are
+constructed, each of which was trained using a random subset of the
+training data and only taking a random subset of the input features into
+account. This randomness aids in improving generalization and lowering
+overfitting. The outputs from each individual tree are averaged or
+combined to create the final prediction during prediction.
+High-dimensional data handling, handling both categorical and numerical
+features, and handling missing values without imputation are all
+capabilities of Random Forest.''``\,''
+
+rf\_model \textless- randomForest(Homicides \textasciitilde{} Robbery +
+AttemptedMurder + Region, data = data) print(rf\_model)
+
+``\,````\#\# Gradient Boosting A potent machine learning algorithm
+called gradient boosting combines the advantages of ensemble methods and
+gradient descent optimization to produce extremely accurate predictive
+models. It functions by building an ensemble of weak prediction models
+sequentially, typically decision trees, with each model being trained to
+correct the mistakes made by the previous models. By computing
+gradients, which stand for the direction of steepest descent, this
+iterative process aims to minimize a particular loss function. Gradient
+Boosting gradually raises the accuracy of its predictions by updating
+the model using these gradients. Gradient Boosting, in contrast to other
+ensemble methods like Random Forest, adapts to the data by giving
+different weights to observations according to their
+significance.''``\,''
+
+xgb\_model \textless- xgboost(data = as.matrix(data{[}, c(``Robbery'',
+``AttemptedMurder'', ``Region''){]}), label = data\$Homicides, nrounds =
+100, objective = ``reg:linear'') print(xgb\_model)
+
+``\,````\# 7. Conclusion This report provides an initial exploration of
+the dataset on intentional homicides and other crimes. By analyzing the
+data, we can gain insights into crime rates across different countries
+and years. Further analysis, including advanced statistical modeling and
+predictive analytics, can be performed to delve deeper into the dataset
+and uncover more nuanced patterns. The findings from this analysis can
+contribute to crime prevention strategies, policy formulation, and
+international comparisons of crime rates.''``\,''
+
+\end{document}
