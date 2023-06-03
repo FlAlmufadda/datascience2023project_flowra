@@ -30,22 +30,27 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r load-package}
-install.packages(tidyverse)
-install.packages(ggplot2)
-install.packages(randomForest)
-install.packages(sf)
+install.packages("tidyverse")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("randomForest")
+install.packages("sf")
 install.packages("maps")
+install.packages("rlang")
 install.packages("leaflet")
 install.packages("caret")
 install.packages("xgboost")
+install.packages("magrittr")
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 library(randomForest)
 library(sf)
 library(maps)
 library(leaflet)
 library(caret) 
 library(xgboost)  
+library(magrittr)
 options(warn = -1)
 ```
 
@@ -78,7 +83,8 @@ data <- read.csv("data/SYB65_328_202209_Intentional homicides and other crimes.c
 Removing unnecessary columns reduces the amount of data that needs to be loaded into memory or processed, leading to better performance and lower memory consumption. This is particularly important when dealing with with this dataset due to it being large as well as having limited computational resources.
 
 ```{r Remove-unnecessary-columns}
-data <- data %>% select(-c(Type..period..indicator., X60, X61, X62, X63, X64, X65))
+data <- data %>% 
+  select(-c(Type..period..indicator., X60, X61, X62, X63, X64, X65))
 data <- select(data, -c(1:2)) # Assuming the first two columns are unnecessary, we remove them
 
 # Remove leading or trailing white spaces from column names
