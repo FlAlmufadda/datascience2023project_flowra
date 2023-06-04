@@ -246,7 +246,8 @@ colnames(data) <- trimws(colnames(data))
 
 # Correlation matrix
 cor_matrix <- cor(data[, c("region", "Rate")])
-cor_matrix
+cor_matrix 
+
 
 ```
 
