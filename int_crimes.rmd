@@ -30,17 +30,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 
 ```{r load-package}
-install.packages("tidyverse")
-install.packages("dplyr")
-install.packages("ggplot2")
-install.packages("randomForest")
-install.packages("sf")
-install.packages("maps")
-install.packages("rlang")
-install.packages("leaflet")
-install.packages("caret")
-install.packages("xgboost")
-install.packages("magrittr")
+
 library(tidyverse)
 library(ggplot2)
 library(dplyr)
@@ -76,19 +66,20 @@ The dataset was loaded into RStudio, and basic data cleaning steps were performe
 
 # Read the CSV file
 ```{r load-data}
-data <- read.csv("data/SYB65_328_202209_Intentional homicides and other crimes.csv", stringsAsFactors = FALSE)
+data <- read.csv("SYB65_328_202209_Intentional homicides and other crimes.csv", stringsAsFactors = FALSE)
 ```
 
 # Remove unnecessary columns
 Removing unnecessary columns reduces the amount of data that needs to be loaded into memory or processed, leading to better performance and lower memory consumption. This is particularly important when dealing with with this dataset due to it being large as well as having limited computational resources.
 
 ```{r Remove-unnecessary-columns}
-data <- data %>% 
-  select(-c(Type..period..indicator., X60, X61, X62, X63, X64, X65))
-data <- select(data, -c(1:2)) # Assuming the first two columns are unnecessary, we remove them
+# Remove the "X.3" column
+data <- data %>%
+  select(-X.3)
 
-# Remove leading or trailing white spaces from column names
-colnames(data) <- trimws(colnames(data))
+
+
+
 ```
 
 # Dealing with and dropping rows with missing values
@@ -106,7 +97,10 @@ data <- na.omit(data)          # Remove rows with missing values
 Renaming columns in a dataset serves the purpose of providing more descriptive and meaningful names to the variables (columns) present in the dataset. By giving the columns clear and informative names, it enhances the readability, understanding, and interpretability of the data.
 """
 ```{r rename-column}
-colnames(data) <- c("Country", "Year", "Region", "Subregion", "Rate")
+colnames(data) <- c("Region/Country/Area", "Region", "Year", "Homicides", "Rate")
+```
+```{r}
+colnames(data)
 ```
 
 # Convert the 'Rate' column to numeric
@@ -156,33 +150,39 @@ ggplot(data, aes(x = Year, y = Homicides)) +
 
 ```{r bar-chart}
 # Bar chart for other crimes over time
-ggplot(data, aes(x = Year, y = Robbery)) +
+ggplot(data, aes(x = Year, y = "Percentage of male and female intentional homicide victims, Female
+")) +
   geom_bar(stat = "identity", fill = "blue") +
   labs(x = "Year", y = "Other Crimes", title = "Trends in Other Crimes over Time")
 ```
 
 
 ```{r bar-plot}
-# Bar plot for intentional homicides by country
-ggplot(data, aes(x = Country, y = Intentional.homicides)) +
+# Remove leading and trailing spaces from column names
+colnames(data) <- trimws(colnames(data))
+
+# Plot the data
+ggplot(data, aes(x =Region, y = Rate)) +
   geom_bar(stat = "identity", fill = "steelblue") +
   labs(x = "Country", y = "Intentional Homicides", title = "Intentional Homicides by Country") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   coord_flip()
+
 ```
 
 ```{r scatter-plot}
 # Scatter plot for intentional homicides vs. other crimes
-ggplot(data, aes(x = Intentional.homicides, y = Other.crimes)) +
+ggplot(data, aes(x ="Intentional homicide rates per 100,000", y = "Percentage of male and female intentional homicide victims, Male")) +
   geom_point() +
   labs(x = "Intentional Homicides", y = "Other Crimes", title = "Intentional Homicides vs. Other Crimes")
 ```
 
 ```{r histogram}
-# Histogram of intentional homicides
-ggplot(data, aes(x = Intentional.homicides)) +
-  geom_histogram(fill = "steelblue", bins = 20) +
+# Bar of intentional homicides
+ggplot(data, aes(x = "Intentional homicide rates per 100,000")) +
+  geom_bar(fill = "steelblue") +
   labs(x = "Intentional Homicides", y = "Frequency", title = "Distribution of Intentional Homicides")
+
 ```
 
 # C) Spatial Analysis:
@@ -191,18 +191,37 @@ ggplot(data, aes(x = Intentional.homicides)) +
 
 
 ```{r choropleth}
-# Create a choropleth map for intentional homicides
+
+# Select necessary columns (Region/Country/Area and Homicides)
+datam <- data %>% select(`Region/Country/Area`, Homicides)
+
+
+# Rename the column in the dataset to match the world map data
+colnames(datam)[1] <- "region"
+
+# Remove leading and trailing spaces from column names
+colnames(datam) <- trimws(colnames(datam))
+
+datam$Homicides <- as.numeric(datam$Homicides)
+datam <- na.omit(datam)
+
+# Merge with world map data
 world_map <- map_data("world")
-data_map <- merge(world_map, data, by.x = "region", by.y = "Country", all.x = TRUE)
+data_map <- left_join(world_map, datam, by = "region")
+
+
+# Create the choropleth map
 ggplot(data_map, aes(x = long, y = lat, group = group, fill = Homicides)) +
   geom_polygon() +
   scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "white") +
-  labs(fill = "Intentional Homicides", title = "Choropleth Map of Intentional Homicides")
+  labs(fill = "Homicides", title = "Choropleth Map of Homicides by Regions")
+
+
 ```
 
 ```{r bubble-map}
 # Create a bubble map for other crimes
-ggplot(data, aes(x = Year, y = Country, size = Robbery, fill = Homicides)) +
+ggplot(data, aes(x = Year, y = Region, size = "Percentage of male and female intentional homicide victims, Male" , fill = Homicides)) +
   geom_point() +
   scale_size(range = c(2, 10)) +
   scale_fill_gradient(low = "lightblue", high = "darkblue", na.value = "white") +
@@ -215,15 +234,20 @@ ggplot(data, aes(x = Year, y = Country, size = Robbery, fill = Homicides)) +
 
 ```{r scatter-plot}
 # Scatter plot between intentional homicides and other crimes
-ggplot(data, aes(x = Homicides, y = Robbery)) +
+ggplot(data, aes(x = "Intentional homicide rates per 100,000", y = "Robbery at the national level, rate per 100,000 population
+")) +
   geom_point() +
   labs(x = "Intentional Homicides", y = "Other Crimes", title = "Scatter Plot: Intentional Homicides vs. Other Crimes")
 ```
 
 ```{r correlation-matrix}
+
+colnames(data) <- trimws(colnames(data))
+
 # Correlation matrix
-cor_matrix <- cor(data[, c("Homicides", "AttemptedMurder", "Robbery")])
+cor_matrix <- cor(data[, c("region", "Rate")])
 cor_matrix
+
 ```
 
 # Identification of outliers or patterns
